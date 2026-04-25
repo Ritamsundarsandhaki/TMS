@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,37 +46,45 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
-  // ================= LOGIN =================
-  const onSubmit = async (data: LoginForm) => {
-    const loadingId = toastService.loading("Signing in...");
+ const onSubmit = async (data: LoginForm) => {
+  const loadingId = toastService.loading("Signing in...");
 
-    try {
-      const payload: LoginRequest = {
-        email: data.email,
-        password: data.password,
+  try {
+    const payload: LoginRequest = {
+      email: data.email,
+      password: data.password,
+    };
+
+    const res = await authService.login(payload);
+
+    toastService.dismiss(loadingId);
+
+    const token = res.data.access_token;
+
+    if (token) {
+      const user = {
+        ...res.data.user,
+        id: Number(res.data.user.id),
       };
 
-      const res = await authService.login(payload);
-
-      toastService.dismiss(loadingId);
-
-      console.log(res)
-      const token = res.data.access_token;
-
-      if (token) {
-        dispatch(loginSuccess(token));
-        console.log(token)
-      }
-      toastService.success("Login successful ");
-
-      navigate("/dashboard");
-    } catch (error: any) {
-      toastService.dismiss(loadingId);
-      toastService.error(
-        error?.response?.data?.message || "Invalid email or password"
+      dispatch(
+        loginSuccess({
+          token,
+          user,
+        })
       );
     }
-  };
+
+    toastService.success("Login successful");
+
+    navigate("/dashboard");
+  } catch (error: any) {
+    toastService.dismiss(loadingId);
+    toastService.error(
+      error?.response?.data?.message || "Invalid email or password"
+    );
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f7f3ee] to-[#f1ece4] px-6">
@@ -144,7 +152,16 @@ export default function Login() {
                 >
                   {isSubmitting ? "Signing in..." : "Sign in"}
                 </Button>
-
+                {/* REGISTER LINK */}
+                <p className="text-center text-sm text-gray-600 mt-4">
+                  Don’t have an account?{" "}
+                  <Link
+                    to="/register"
+                    className="text-blue-600 font-medium hover:underline"
+                  >
+                    Create account
+                  </Link>
+                </p>
               </form>
             </CardContent>
           </Card>
