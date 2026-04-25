@@ -30,7 +30,8 @@ import { readdirSync } from 'fs';
           database: configService.get('DB_NAME', 'ridozo_db'),
           synchronize: true,  
           entities,
-          ssl: configService.get('NODE_ENV') === 'prod' ? { rejectUnauthorized: false } : undefined,
+          // ssl: configService.get('NODE_ENV') === 'prod' ? { rejectUnauthorized: false } : undefined,
+          ssl:true
         };
       },
     }),
