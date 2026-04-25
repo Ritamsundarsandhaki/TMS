@@ -1,13 +1,11 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Task } from '../../common/entities/task.entity';
 import { User } from '../../common/entities/user.entity';
+import { TaskStatus } from 'src/common/enums/enums';
 
 @Injectable()
 export class TaskService {
@@ -19,57 +17,96 @@ export class TaskService {
     private userRepository: Repository<User>,
   ) {}
 
-  //  CREATE TASK
+  // ================= CREATE TASK =================
   async create(createTaskDto: CreateTaskDto, userId: number) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
 
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     const task = this.taskRepository.create({
       ...createTaskDto,
-      user:{id:user?.id}
+      user: { id: user.id },
     });
 
-    return await this.taskRepository.save(task);
+    const saved = await this.taskRepository.save(task);
+
+    return { data: saved };
   }
 
-  // GET ALL TASKS (User-specific + Pagination + Filter)
   async findAll(
     userId: number,
     page = 1,
     limit = 10,
     status?: string,
+    search?: string,
   ) {
-    const query = this.taskRepository.createQueryBuilder('task')
-      .where('task.user.id = :userId', { userId });
+    const query = this.taskRepository
+      .createQueryBuilder('task')
+      .leftJoinAndSelect('task.user', 'user')
+      .where('user.id = :userId', { userId });
 
+    // ================= STATUS FILTER =================
     if (status) {
       query.andWhere('task.status = :status', { status });
     }
 
-    query
-      .orderBy('task.createdAt', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit);
+    // ================= SEARCH FILTER =================
+    if (search) {
+      query.andWhere(
+        '(task.title ILIKE :search OR task.description ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    // ================= PAGINATION =================
+    const skip = (page - 1) * limit;
+
+    query.orderBy('task.createdAt', 'DESC').skip(skip).take(limit);
 
     const [data, total] = await query.getManyAndCount();
 
     return {
+      data,
       total,
       page,
       limit,
-      data,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+      hasPrevPage: page > 1,
     };
   }
 
-  // GET SINGLE TASK
+  async markAsCompleted(id: number, userId: number) {
+    const task = await this.taskRepository.findOne({
+      where: {
+        id,
+        user: { id: userId },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    task.status = TaskStatus.COMPLETED;
+
+    const updated = await this.taskRepository.save(task);
+
+    return {
+      message: 'Task marked as completed successfully',
+      data: updated,
+    };
+  }
+  // ================= GET SINGLE TASK =================
   async findOne(id: number, userId: number) {
     const task = await this.taskRepository.findOne({
       where: {
-        id:id,
-        user:{
-          id:userId
-        }
+        id,
+        user: { id: userId },
       },
       relations: ['user'],
     });
@@ -78,21 +115,41 @@ export class TaskService {
       throw new NotFoundException('Task not found');
     }
 
-    return task;
+    return { data: task };
   }
 
-  // UPDATE TASK
+  // ================= UPDATE TASK =================
   async update(id: number, updateTaskDto: UpdateTaskDto, userId: number) {
-    const task = await this.findOne(id, userId);
+    const task = await this.taskRepository.findOne({
+      where: {
+        id,
+        user: { id: userId },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
 
     Object.assign(task, updateTaskDto);
 
-    return await this.taskRepository.save(task);
+    const updated = await this.taskRepository.save(task);
+
+    return { data: updated };
   }
 
-  //  DELETE TASK (Soft delete)
+  // ================= DELETE TASK =================
   async remove(id: number, userId: number) {
-    const task = await this.findOne(id, userId);
+    const task = await this.taskRepository.findOne({
+      where: {
+        id,
+        user: { id: userId },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
 
     await this.taskRepository.softRemove(task);
 

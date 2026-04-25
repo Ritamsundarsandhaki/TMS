@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './common/db/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TaskModule } from './modules/task/task.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { TaskModule } from './modules/task/task.module';
     DatabaseModule,
     AuthModule,
     TaskModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

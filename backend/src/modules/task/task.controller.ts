@@ -57,6 +57,7 @@ export class TaskController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('status') status?: string,
+    @Query('search') search?: string,
   ) {
     const userId = req?.user?.sub;
 
@@ -65,6 +66,7 @@ export class TaskController {
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 10,
       status,
+      search,
     );
   }
 
@@ -93,6 +95,11 @@ export class TaskController {
   ) {
     const userId = req?.user?.sub;
     return this.taskService.update(Number(id), updateTaskDto, userId);
+  }
+
+  @Patch(':id/complete')
+  markAsCompleted(@Param('id') id: number, @Req() req: any) {
+    return this.taskService.markAsCompleted(id, req.user.id);
   }
 
   /**
