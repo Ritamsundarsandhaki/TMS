@@ -1,11 +1,9 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  FiHome,
-  FiList,
-  FiBarChart2,
-  FiSettings,
-  FiLogOut,
-} from "react-icons/fi";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState } from "@/redux/stores/store";
+
+import { FiHome, FiList, FiLogOut } from "react-icons/fi";
+import { logout } from "@/redux/slices/globalSlice";
 
 function Sidebar({
   open,
@@ -16,6 +14,9 @@ function Sidebar({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+
+  const user = useSelector((state: RootState) => state.global.user);
 
   const menu = [
     { name: "Dashboard", icon: <FiHome />, path: "/dashboard" },
@@ -40,12 +41,21 @@ function Sidebar({
       {/* USER */}
       <div className="flex items-center gap-3 mb-6 bg-white/10 p-3 rounded-lg">
         <img
-          src="https://i.pravatar.cc/100"
+          src={
+            user?.profileImage
+              ? user.profileImage
+              : "https://i.pravatar.cc/100"
+          }
           className="w-10 h-10 rounded-full"
         />
+
         <div>
-          <p className="text-sm font-semibold">John Doe</p>
-          <p className="text-xs text-gray-300">user@mail.com</p>
+          <p className="text-sm font-semibold">
+            {user?.email?.split("@")[0] || "User"}
+          </p>
+          <p className="text-xs text-gray-300">
+            {user?.email || "user@mail.com"}
+          </p>
         </div>
       </div>
 
@@ -78,7 +88,7 @@ function Sidebar({
       {/* LOGOUT */}
       <button
         onClick={() => {
-          localStorage.removeItem("token");
+          dispatch(logout());
           navigate("/login");
         }}
         className="absolute bottom-5 left-5 right-5 flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 py-2 rounded-lg"

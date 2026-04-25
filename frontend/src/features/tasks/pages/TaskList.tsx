@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { taskService } from "@/services/task.service";
 import { TaskStatus } from "@/types/enums";
-import {
-  FiTrash
-} from "react-icons/fi";
+import { FiTrash } from "react-icons/fi";
+import { toastService } from "@/utils/toast.service";
 
 function TaskList() {
   const navigate = useNavigate();
@@ -19,6 +18,8 @@ function TaskList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
   const [confirmTaskId, setConfirmTaskId] = useState<number | null>(null);
   const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
 
@@ -26,15 +27,25 @@ function TaskList() {
 
   // ================= FETCH TASKS =================
   const fetchTasks = async () => {
-    const res = await taskService.getAllTasks({
-      page,
-      limit,
-      status: statusFilter || undefined,
-      search: search || undefined,
-    });
+    try {
+      setLoading(true);
+      const res = await taskService.getAllTasks({
+        page,
+        limit,
+        status: statusFilter || undefined,
+        search: search || undefined,
+      });
 
-    setTasks(res.data || []);
-    setTotal(res.total || 0);
+      setTasks(res.data || []);
+      setTotal(res.total || 0);
+    } catch (err:any) {
+        toastService.error(
+        err?.response?.data?.message || "Faild Loading Data"
+      );
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -62,8 +73,11 @@ function TaskList() {
         )
       );
 
+    toastService.success("Task completed successfully");
+
       setConfirmTaskId(null);
-    } catch (err) {
+    } catch (err:any) {
+    toastService.error(err?.response?.data?.message ||"Failed to complete task");
       console.error(err);
     }
   };
@@ -91,7 +105,6 @@ function TaskList() {
   // ================= COLUMN =================
   const StatusColumn = ({ title, items, color }: any) => (
     <div className="bg-gray-100 rounded-2xl p-3 sm:p-4 w-full min-h-[60vh] shadow-sm">
-
       <h2 className={`font-bold mb-4 text-xs sm:text-sm uppercase ${color}`}>
         {title} ({items.length})
       </h2>
@@ -108,16 +121,14 @@ function TaskList() {
                 {task.title}
               </h3>
 
-              {/* DELETE ICON */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setDeleteTaskId(task.id);
                 }}
                 className="text-red-500 hover:text-red-700"
-                title="Delete Task"
               >
-                <FiTrash/>
+                <FiTrash />
               </button>
             </div>
 
@@ -132,7 +143,6 @@ function TaskList() {
               />
             </div>
 
-            {/* COMPLETE BUTTON */}
             {task.status !== TaskStatus.COMPLETED && (
               <button
                 onClick={(e) => {
@@ -153,13 +163,12 @@ function TaskList() {
   return (
     <div className="min-h-screen p-3 sm:p-6 bg-gray-50">
 
-      {/* ================= HEADER ================= */}
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-
         <div>
           <h1 className="text-xl sm:text-2xl font-bold">Task Dashboard</h1>
           <p className="text-xs sm:text-sm text-gray-500">
-            Manage your tasks like Jira
+            Manage your tasks
           </p>
         </div>
 
@@ -213,8 +222,15 @@ function TaskList() {
         </div>
       </div>
 
-      {/* ================= BOARD ================= */}
-      {view === "board" && (
+      {/* LOADING */}
+      {loading && (
+        <div className="text-center py-10 text-gray-500">
+          Loading tasks...
+        </div>
+      )}
+
+      {/* BOARD */}
+      {!loading && view === "board" && (
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <StatusColumn title="Pending" items={grouped.PENDING} color="text-gray-600" />
           <StatusColumn title="In Progress" items={grouped.IN_PROGRESS} color="text-blue-600" />
@@ -222,8 +238,8 @@ function TaskList() {
         </div>
       )}
 
-      {/* ================= TABLE ================= */}
-      {view === "table" && (
+      {/* TABLE */}
+      {!loading && view === "table" && (
         <div className="bg-white rounded-xl shadow overflow-x-auto">
           <table className="w-full min-w-[600px] text-sm">
             <thead className="bg-gray-100 text-left">
@@ -259,7 +275,6 @@ function TaskList() {
                     </div>
                   </td>
 
-                  {/* DELETE ICON */}
                   <td className="p-2">
                     <button
                       onClick={(e) => {
@@ -278,7 +293,40 @@ function TaskList() {
         </div>
       )}
 
-      {/* ================= COMPLETE MODAL ================= */}
+      {/* PAGINATION */}
+      {!loading && totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`px-3 py-1 border rounded ${
+                page === p ? "bg-black text-white" : ""
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {/* MODALS (UNCHANGED) */}
       {confirmTaskId && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg w-80">
@@ -286,17 +334,10 @@ function TaskList() {
             <p className="text-sm text-gray-500 mb-4">Are you sure?</p>
 
             <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setConfirmTaskId(null)}
-                className="px-3 py-1 bg-gray-200 rounded"
-              >
+              <button onClick={() => setConfirmTaskId(null)} className="px-3 py-1 bg-gray-200 rounded">
                 Cancel
               </button>
-
-              <button
-                onClick={() => handleComplete(confirmTaskId)}
-                className="px-3 py-1 bg-green-600 text-white rounded"
-              >
+              <button onClick={() => handleComplete(confirmTaskId)} className="px-3 py-1 bg-green-600 text-white rounded">
                 Yes
               </button>
             </div>
@@ -304,36 +345,23 @@ function TaskList() {
         </div>
       )}
 
-      {/* ================= DELETE MODAL ================= */}
       {deleteTaskId && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg w-80">
-            <h2 className="text-lg font-semibold mb-2 text-red-600">
-              Delete Task?
-            </h2>
-            <p className="text-sm text-gray-500 mb-4">
-              This action cannot be undone.
-            </p>
+            <h2 className="text-lg font-semibold mb-2 text-red-600">Delete Task?</h2>
+            <p className="text-sm text-gray-500 mb-4">This action cannot be undone.</p>
 
             <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteTaskId(null)}
-                className="px-3 py-1 bg-gray-200 rounded"
-              >
+              <button onClick={() => setDeleteTaskId(null)} className="px-3 py-1 bg-gray-200 rounded">
                 Cancel
               </button>
-
-              <button
-                onClick={() => handleDelete(deleteTaskId)}
-                className="px-3 py-1 bg-red-600 text-white rounded"
-              >
+              <button onClick={() => handleDelete(deleteTaskId)} className="px-3 py-1 bg-red-600 text-white rounded">
                 Delete
               </button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

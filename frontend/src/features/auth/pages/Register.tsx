@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,Link  } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,6 +141,16 @@ export default function Register() {
                 >
                   {isSubmitting ? "Creating..." : "Sign up"}
                 </Button>
+                {/* LOGIN LINK */}
+                <p className="text-center text-sm text-gray-600 mt-4">
+                  Already have an account?{" "}
+                  <Link
+                    to="/login"
+                    className="text-blue-600 font-medium hover:underline"
+                  >
+                    Login
+                  </Link>
+                </p>
 
               </form>
             </CardContent>
