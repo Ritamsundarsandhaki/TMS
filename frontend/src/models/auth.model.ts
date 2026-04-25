@@ -2,20 +2,19 @@
 export interface LoginRequest {
   email: string;
   password: string;
-  role:string;
 }
 
 // frontend/models/auth.ts
 
 export interface SignupRequest {
-  fullName: string;
-  username: string;
+  name: string;
   email: string;
   password: string;
 }
 
 // Response model 
 export interface LoginResponse {
+ data:{
   access_token: string;
   refresh_token?: string;
 
@@ -24,6 +23,7 @@ export interface LoginResponse {
     name: string;
     email: string;
   };
+}
 }
 
 export interface SignupResponse {

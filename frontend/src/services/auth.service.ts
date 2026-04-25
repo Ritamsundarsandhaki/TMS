@@ -12,7 +12,7 @@ class AuthService {
 
   // ================= SIGNUP =================
   async signup(data: SignupRequest): Promise<LoginResponse> {
-    const response = await api.post<LoginResponse>(`${this.baseUrl}/signup`, data);
+    const response = await api.post<LoginResponse>(`${this.baseUrl}/register`, data);
     return response.data;
   }
 

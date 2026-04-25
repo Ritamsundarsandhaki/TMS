@@ -47,7 +47,7 @@ export class AuthService {
     };
   }
 
-  // 🔐 LOGIN
+  // LOGIN
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
@@ -56,12 +56,12 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new BadRequestException('Invalid credentials');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new BadRequestException('Invalid credentials');
     }
 
     const payload = {

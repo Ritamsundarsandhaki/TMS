@@ -39,22 +39,22 @@ export class Task {
   })
   priority: TaskPriority;
 
-  // 📊 Progress
+  // Progress
   @Column({ type: 'int', default: 0 })
   progress: number;
 
-  // ⏰ Due Date
+  // Due Date
   @Column({ type: 'timestamp', nullable: true })
   @Index()
   dueDate: Date;
 
-  // 🔗 Relation
+  //  Relation
   @ManyToOne(() => User, (user) => user.tasks, {
     onDelete: 'CASCADE',
   })
   user: User;
 
-  // 📅 Timestamps
+  //  Timestamps
   @CreateDateColumn()
   createdAt: Date;
 
