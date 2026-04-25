@@ -1,18 +1,28 @@
-# Task Management System
+# 🚀 Task Management System
 
-A full-stack Task Management System built using React, NestJS, and PostgreSQL.
+A full-stack **Task Management System** built using **React, NestJS, and PostgreSQL**.
 
 ---
 
-## Features
+## 🌐 Live Links
 
-### Authentication
+- 🖥️ Frontend: https://task-mage.netlify.app/
+- ⚙️ Backend API: https://tms-api-7nc6.onrender.com
+- 📚 API Documentation: https://tms-api-7nc6.onrender.com/api-docs
+
+---
+
+## ✨ Features
+
+### 🔐 Authentication
 - User Signup and Login
 - JWT-based authentication
 - Protected routes
-- Persistent login using Redux and LocalStorage
+- Persistent login using Redux + LocalStorage
 
-### Task Management
+---
+
+### 📋 Task Management
 - Create tasks
 - Update tasks
 - Delete tasks
@@ -22,21 +32,25 @@ A full-stack Task Management System built using React, NestJS, and PostgreSQL.
   - In Progress
   - Completed
 
-### Dashboard
+---
+
+### 📊 Dashboard
 - Board view (Kanban style)
 - Table view
 - Search tasks
-- Filter tasks by status
+- Filter by status
 - Pagination support
 
-### User System
+---
+
+### 👤 User System
 - User profile stored in JWT
-- Sidebar displays logged-in user information
+- Sidebar shows logged-in user information
 - Logout functionality
 
 ---
 
-## Tech Stack
+## 🏗️ Tech Stack
 
 ### Frontend
 - React.js
@@ -55,4 +69,4 @@ A full-stack Task Management System built using React, NestJS, and PostgreSQL.
 
 ---
 
-## Project Structure
+## 📁 Project Structure
